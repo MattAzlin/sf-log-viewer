@@ -13,10 +13,13 @@ app.get('/api/orgs', async (req, res) => {
 
 app.get('/api/logs', async (req, res) => {
     try {
-        const { org, page, filter } = req.query;
-        const logs = await sf.getLogs(org, parseInt(page), filter);
+        const { org, page, filter, sortField, sortOrder } = req.query;
+        // Pass the sort parameters to the library
+        const logs = await sf.getLogs(org, page, filter, sortField, sortOrder);
         res.json(logs);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.get('/api/log/:id', async (req, res) => {
