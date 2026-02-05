@@ -1,4 +1,6 @@
 let currentPage = 1;
+let currentSortField = 'StartTime';
+let currentSortOrder = 'DESC';
 const orgSelect = document.getElementById('orgSelect');
 const logTable = document.getElementById('logTable');
 const logContent = document.getElementById('logContent');
@@ -18,22 +20,38 @@ async function init() {
     loadLogs();
 }
 
+// Function to handle header clicks
+function setSort(field) {
+    if (currentSortField === field) {
+        // Toggle direction if clicking the same field
+        currentSortOrder = currentSortOrder === 'DESC' ? 'ASC' : 'DESC';
+    } else {
+        // Default to DESC for new fields
+        currentSortField = field;
+        currentSortOrder = 'DESC';
+    }
+    currentPage = 1; // Reset to page 1 when sorting changes
+    loadLogs();
+}
+
 async function loadLogs() {
     const org = orgSelect.value;
     if (!org || org === "Loading...") return;
 
-    logTable.innerHTML = '<tr><td colspan="5">Querying Salesforce CLI...</td></tr>';
+    logTable.innerHTML = '<tr><td colspan="5">Sorting logs...</td></tr>';
     const filter = encodeURIComponent(searchInput.value);
 
     try {
-        const res = await fetch(`/api/logs?org=${encodeURIComponent(org)}&page=${currentPage}&filter=${filter}`);
+        // Added sortField and sortOrder to the URL parameters
+        const url = `/api/logs?org=${encodeURIComponent(org)}&page=${currentPage}&filter=${filter}&sortField=${currentSortField}&sortOrder=${currentSortOrder}`;
+        const res = await fetch(url);
         const logs = await res.json();
 
         if (logs.error) throw new Error(logs.error);
 
         logTable.innerHTML = logs.map(l => `
             <tr>
-                <td>${new Date(l.StartTime).toLocaleTimeString()}</td>
+                <td>${new Date(l.StartTime).toLocaleString()}</td>
                 <td>${l.Operation}</td>
                 <td class="${l.Status !== 'Success' ? 'log-fail' : ''}">${l.Status}</td>
                 <td>${(l.LogLength / 1024).toFixed(1)} KB</td>
@@ -43,7 +61,7 @@ async function loadLogs() {
     } catch (err) {
         logTable.innerHTML = `<tr><td colspan="5" style="color:red">${err.message}</td></tr>`;
     }
-    document.getElementById('pageDisplay').innerText = `Page ${currentPage}`;
+    document.getElementById('pageDisplay').innerText = `Page ${currentPage} (Sorted by ${currentSortField})`;
 }
 
 async function viewLog(id) {
