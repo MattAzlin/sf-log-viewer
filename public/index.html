@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SFDC Log Explorer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        .controls { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+        .log-fail { color: #ff5f5f; font-weight: bold; }
+        pre { background: #1e1e1e; color: #76ff03; padding: 15px; max-height: 500px; overflow: auto; }
+    </style>
+</head>
+<body>
+<h2>☁️ Salesforce Log Explorer</h2>
+<div class="controls">
+    <div><label>Org</label><select id="orgSelect"><option>Loading...</option></select></div>
+    <div><label>Search</label><input type="text" id="searchInput" placeholder="Status or Op..."></div>
+    <button id="searchBtn">Filter</button>
+</div>
+
+<table>
+    <thead><tr><th>Time</th><th>Operation</th><th>Status</th><th>Size</th><th>Action</th></tr></thead>
+    <tbody id="logTable"></tbody>
+</table>
+
+<div class="controls">
+    <button id="prevBtn">← Prev</button>
+    <span id="pageDisplay">Page 1</span>
+    <button id="nextBtn">Next →</button>
+</div>
+<hr>
+<div style="display:flex; justify-content: space-between;">
+    <h3>Log Preview</h3>
+    <button id="downloadBtn" style="display:none">Download .log</button>
+</div>
+<pre id="logContent">Select a log to view.</pre>
+<script src="script.js"></script>
+</body>
+</html>
