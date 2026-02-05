@@ -48,19 +48,41 @@ async function loadLogs() {
 
 async function viewLog(id) {
     const org = orgSelect.value;
-    logContent.innerText = "Downloading...";
-    const res = await fetch(`/api/log/${id}?org=${encodeURIComponent(org)}`);
-    const data = await res.json();
-    logContent.innerText = data.body;
+    logContent.innerText = "Downloading large log file...";
+    downloadBtn.style.display = 'none'; // Hide until ready
 
-    downloadBtn.style.display = 'block';
-    downloadBtn.onclick = () => {
-        const blob = new Blob([data.body], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Log_${id}.log`;
-        a.click();
-    };
+    try {
+        const res = await fetch(`/api/log/${id}?org=${encodeURIComponent(org)}`);
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        // UI Performance: Only preview the first 10k characters
+        const previewLimit = 10000;
+        if (data.body.length > previewLimit) {
+            logContent.innerText = data.body.substring(0, previewLimit) +
+                "\n\n--- LOG TRUNCATED IN PREVIEW. DOWNLOAD FOR FULL CONTENT ---";
+        } else {
+            logContent.innerText = data.body;
+        }
+
+        // Setup Download
+        downloadBtn.style.display = 'block';
+        downloadBtn.onclick = () => {
+            // Use a Blob to handle large data efficiently
+            const blob = new Blob([data.body], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Log_${id}.log`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up memory
+        };
+    } catch (err) {
+        logContent.innerText = "Error: " + err.message;
+    }
 }
 
 orgSelect.onchange = () => { currentPage = 1; loadLogs(); };
