@@ -1,5 +1,6 @@
 const express = require('express');
 const sf = require('./lib/sf-provider');
+const path = require('path');
 const app = express();
 const PORT = 3000;
 
@@ -14,12 +15,9 @@ app.get('/api/orgs', async (req, res) => {
 app.get('/api/logs', async (req, res) => {
     try {
         const { org, page, filter, sortField, sortOrder } = req.query;
-        // Pass the sort parameters to the library
-        const logs = await sf.getLogs(org, page, filter, sortField, sortOrder);
+        const logs = await sf.getLogs(org, parseInt(page), filter, sortField, sortOrder);
         res.json(logs);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/log/:id', async (req, res) => {
@@ -29,4 +27,4 @@ app.get('/api/log/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server: http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Viewer running at http://localhost:${PORT}`));

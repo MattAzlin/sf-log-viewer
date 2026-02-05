@@ -1,6 +1,7 @@
 let currentPage = 1;
 let currentSortField = 'StartTime';
 let currentSortOrder = 'DESC';
+
 const orgSelect = document.getElementById('orgSelect');
 const logTable = document.getElementById('logTable');
 const logContent = document.getElementById('logContent');
@@ -8,29 +9,30 @@ const searchInput = document.getElementById('searchInput');
 const downloadBtn = document.getElementById('downloadBtn');
 
 async function init() {
-    const res = await fetch('/api/orgs');
-    const orgs = await res.json();
-    if(orgs.error) { alert(orgs.error); return; }
+    try {
+        const res = await fetch('/api/orgs');
+        const orgs = await res.json();
+        if (orgs.error) throw new Error(orgs.error);
 
-    orgSelect.innerHTML = orgs.map(o => {
-        const name = o.alias || o.username;
-        return `<option value="${name}">${name}</option>`;
-    }).join('');
+        orgSelect.innerHTML = orgs.map(o => {
+            const val = o.alias || o.username;
+            return `<option value="${val}">${val}</option>`;
+        }).join('');
 
-    loadLogs();
+        loadLogs();
+    } catch (err) {
+        logTable.innerHTML = `<tr><td colspan="5" style="color:red">Error: ${err.message}</td></tr>`;
+    }
 }
 
-// Function to handle header clicks
 function setSort(field) {
     if (currentSortField === field) {
-        // Toggle direction if clicking the same field
         currentSortOrder = currentSortOrder === 'DESC' ? 'ASC' : 'DESC';
     } else {
-        // Default to DESC for new fields
         currentSortField = field;
         currentSortOrder = 'DESC';
     }
-    currentPage = 1; // Reset to page 1 when sorting changes
+    currentPage = 1;
     loadLogs();
 }
 
@@ -38,11 +40,10 @@ async function loadLogs() {
     const org = orgSelect.value;
     if (!org || org === "Loading...") return;
 
-    logTable.innerHTML = '<tr><td colspan="5">Sorting logs...</td></tr>';
+    logTable.innerHTML = '<tr><td colspan="5">Fetching logs via CLI...</td></tr>';
     const filter = encodeURIComponent(searchInput.value);
 
     try {
-        // Added sortField and sortOrder to the URL parameters
         const url = `/api/logs?org=${encodeURIComponent(org)}&page=${currentPage}&filter=${filter}&sortField=${currentSortField}&sortOrder=${currentSortOrder}`;
         const res = await fetch(url);
         const logs = await res.json();
@@ -61,33 +62,26 @@ async function loadLogs() {
     } catch (err) {
         logTable.innerHTML = `<tr><td colspan="5" style="color:red">${err.message}</td></tr>`;
     }
-    document.getElementById('pageDisplay').innerText = `Page ${currentPage} (Sorted by ${currentSortField})`;
+    document.getElementById('pageDisplay').innerText = `Page ${currentPage} (Sorted by ${currentSortField} ${currentSortOrder})`;
 }
 
 async function viewLog(id) {
     const org = orgSelect.value;
-    logContent.innerText = "Downloading large log file...";
-    downloadBtn.style.display = 'none'; // Hide until ready
+    logContent.innerText = "Downloading full log content...";
+    downloadBtn.style.display = 'none';
 
     try {
         const res = await fetch(`/api/log/${id}?org=${encodeURIComponent(org)}`);
         const data = await res.json();
-
         if (data.error) throw new Error(data.error);
 
-        // UI Performance: Only preview the first 10k characters
-        const previewLimit = 10000;
-        if (data.body.length > previewLimit) {
-            logContent.innerText = data.body.substring(0, previewLimit) +
-                "\n\n--- LOG TRUNCATED IN PREVIEW. DOWNLOAD FOR FULL CONTENT ---";
-        } else {
-            logContent.innerText = data.body;
-        }
+        // Preview limit for UI performance
+        logContent.innerText = data.body.length > 20000
+            ? data.body.substring(0, 20000) + "\n\n... [TRUNCATED FOR PREVIEW - DOWNLOAD FOR FULL CONTENT] ..."
+            : data.body;
 
-        // Setup Download
         downloadBtn.style.display = 'block';
         downloadBtn.onclick = () => {
-            // Use a Blob to handle large data efficiently
             const blob = new Blob([data.body], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -96,13 +90,14 @@ async function viewLog(id) {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url); // Clean up memory
+            URL.revokeObjectURL(url);
         };
     } catch (err) {
-        logContent.innerText = "Error: " + err.message;
+        logContent.innerText = "Error fetching log: " + err.message;
     }
 }
 
+// Event bindings
 orgSelect.onchange = () => { currentPage = 1; loadLogs(); };
 document.getElementById('searchBtn').onclick = () => { currentPage = 1; loadLogs(); };
 document.getElementById('nextBtn').onclick = () => { currentPage++; loadLogs(); };

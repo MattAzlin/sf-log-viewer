@@ -1,46 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>SFDC Log Explorer</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
     <style>
-        .controls { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+        .controls { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; }
         .log-fail { color: #ff5f5f; font-weight: bold; }
-        pre { background: #1e1e1e; color: #76ff03; padding: 15px; max-height: 500px; overflow: auto; }
+        th.sortable { cursor: pointer; text-decoration: underline; color: #00a8ff; }
+        pre { background: #1e1e1e; color: #76ff03; padding: 15px; max-height: 500px; overflow: auto; border-radius: 4px; }
+        .page-ctrl { margin-top: 10px; display: flex; align-items: center; gap: 20px; }
     </style>
 </head>
 <body>
-<h2>☁️ Salesforce Log Explorer</h2>
+<h1>☁️ Salesforce Log Explorer</h1>
+
 <div class="controls">
-    <div><label>Org</label><select id="orgSelect"><option>Loading...</option></select></div>
-    <div><label>Search</label><input type="text" id="searchInput" placeholder="Status or Op..."></div>
-    <button id="searchBtn">Filter</button>
+    <div><label>Target Org</label><select id="orgSelect"><option>Loading...</option></select></div>
+    <div><label>Filter</label><input type="text" id="searchInput" placeholder="Search Status/Op..."></div>
+    <button id="searchBtn">Apply Filter</button>
 </div>
 
 <table>
     <thead>
     <tr>
-        <th style="cursor:pointer" onclick="setSort('StartTime')">Time ↕️</th>
+        <th class="sortable" onclick="setSort('StartTime')">Time ↕</th>
         <th>Operation</th>
-        <th style="cursor:pointer" onclick="setSort('Status')">Status ↕️</th>
-        <th style="cursor:pointer" onclick="setSort('LogLength')">Size ↕️</th>
+        <th class="sortable" onclick="setSort('Status')">Status ↕</th>
+        <th class="sortable" onclick="setSort('LogLength')">Size ↕</th>
         <th>Action</th>
     </tr>
     </thead>
     <tbody id="logTable"></tbody>
 </table>
 
-<div class="controls">
-    <button id="prevBtn">← Prev</button>
+<div class="page-ctrl">
+    <button id="prevBtn">← Previous</button>
     <span id="pageDisplay">Page 1</span>
     <button id="nextBtn">Next →</button>
 </div>
+
 <hr>
-<div style="display:flex; justify-content: space-between;">
+<div style="display:flex; justify-content: space-between; align-items: center;">
     <h3>Log Preview</h3>
-    <button id="downloadBtn" style="display:none">Download .log</button>
+    <button id="downloadBtn" style="display:none; background-color: #007bff;">Download Full .log</button>
 </div>
-<pre id="logContent">Select a log to view.</pre>
+<pre id="logContent">Select a log to view details...</pre>
+
 <script src="script.js"></script>
 </body>
 </html>
