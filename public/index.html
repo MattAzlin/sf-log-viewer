@@ -18,7 +18,15 @@
 </div>
 
 <table>
-    <thead><tr><th>Time</th><th>Operation</th><th>Status</th><th>Size</th><th>Action</th></tr></thead>
+    <thead>
+    <tr>
+        <th style="cursor:pointer" onclick="setSort('StartTime')">Time ↕️</th>
+        <th>Operation</th>
+        <th style="cursor:pointer" onclick="setSort('Status')">Status ↕️</th>
+        <th style="cursor:pointer" onclick="setSort('LogLength')">Size ↕️</th>
+        <th>Action</th>
+    </tr>
+    </thead>
     <tbody id="logTable"></tbody>
 </table>
 
